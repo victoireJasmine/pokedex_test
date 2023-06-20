@@ -1,4 +1,4 @@
-# pokedex_test (by quasar app)
+# Quasar App (quasar-project)
 
 A Quasar Project
 
@@ -11,7 +11,7 @@ npm install
 
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 ```bash
-yarn dev
+quasar dev
 ```
 
 
@@ -34,7 +34,7 @@ npm run format
 
 ### Build the app for production
 ```bash
-yarn build
+quasar build
 ```
 
 ### Customize the configuration
