@@ -82,16 +82,17 @@ module.exports = configure(function (/* ctx */) {
     devServer: {
       // https: true
       open: true, // opens browser window automatically
-      port:9876,
+      port: 9876,
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
     framework: {
-      config: {notify: {
-        /* look at QuasarConfOptions from the API card */
-      }},
+      config: {
+        notify: {
+          /* look at QuasarConfOptions from the API card */
+        },
+      },
       cssAddon: true,
-      
 
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
@@ -104,7 +105,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Notify',  'Meta'],
+      plugins: ['Notify', 'Meta'],
     },
 
     // animations: 'all', // --- includes all animations
