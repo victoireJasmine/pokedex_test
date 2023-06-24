@@ -35,7 +35,7 @@
         <img src="https://cdn.quasar.dev/img/mountains.jpg" />
 
         <q-card-section>
-          <div class="text-subtitle2 ">Number</div>
+          <div class="text-subtitle2">Number</div>
           <div class="text-h6">Name</div>
         </q-card-section>
 
@@ -52,7 +52,6 @@
         </q-card-section>
       </q-card>
     </div>
-
   </q-page>
 </template>
 
