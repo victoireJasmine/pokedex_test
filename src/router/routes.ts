@@ -9,7 +9,9 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/detail',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: ':id', component: () => import('pages/details/DetailPage.vue') }],
+    children: [
+      { path: ':id', component: () => import('pages/details/DetailPage.vue') },
+    ],
   },
 
   // Always leave this as last one,
