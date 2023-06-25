@@ -14,7 +14,9 @@ export const usePokemonStore = defineStore('pokemons-store', {
   actions: {
     load(): Promise<void> {
       this.ready = false;
-      return pokemons()
+      return pokemons(new URLSearchParams({
+        limit:"500" , offset:"0"
+      }))
         .then((data) => {
           this.previous = data.previous;
           this.next = data.next;
