@@ -7,11 +7,13 @@ import {
 } from 'src/normalizr/poke/pokemon';
 
 export const pokemons = (
-  params: URLSearchParams | null = null
+  params: URLSearchParams | undefined = new URLSearchParams({
+    limit:"200", offset:"0"
+  })
 ): Promise<PokemonResult> => {
   let url = '/pokemon';
   if (params?.toString()) {
-    url += '&' + params.toString();
+    url += '?' + params.toString();
   }
   return apis.poke
     .get(url)
