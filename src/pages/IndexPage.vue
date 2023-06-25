@@ -16,8 +16,66 @@
       </q-card>
     </div>
     <div>
-      <div class="flex justify-between items-center">
-        <q-icon name="filter_alt" size="md" color="amber-6" />
+      <div>
+        <q-expansion-item
+          class="overflow-hidden col"
+          icon="filter_alt"
+          label="Filtrer les resultats"
+        >
+          <q-card>
+            <q-card-section>
+              <div class="row">
+                <div class="col-12 col-md-6">
+                  <q-select
+                    v-model="visiblePokemonTypes"
+                    multiple
+                    :options="
+                      pokemonTypes.map((type) => ({ label: type, value: type }))
+                    "
+                    use-chips
+                    stack-label
+                    label-slot
+                    class="q-ma-md"
+                  >
+                    <template #label> Type de pokémon </template>
+                    <template #selected-item="scope">
+                      <q-chip
+                        removable
+                        dense
+                        :tabindex="scope.tabindex"
+                        color="white"
+                        class="q-ma-none"
+                        @remove="scope.removeAtIndex(scope.index)"
+                      >
+                        {{ scope.opt.label }}
+                      </q-chip>
+                    </template>
+                  </q-select>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="row">
+                    
+                    <q-card
+                      v-for="(value, key) in heightScale"
+                      :key="key"
+                      class="col-4 cursor-pointer"
+                      :class="visiblePokemonHeight.includes(value)? 'bg-primary text-white':'' "
+                      @click="updateFilterScale(value)"
+                       
+                    >
+                      <q-card-section>
+                        {{ value }}
+                      </q-card-section>
+                    </q-card>
+                  </div>
+                </div>
+              </div>
+            </q-card-section>
+          </q-card>
+        </q-expansion-item>
+      </div>
+
+      <div class="flex justify-end items-center">
         <q-input
           color="grey-3"
           label-color="primary"
@@ -30,29 +88,33 @@
         </q-input>
       </div>
     </div>
-    <div class="q-py-lg">
-      <div v-if="pokemons" class="row q-col-gutter-md">
+    <div class="q-py-lg q-mt-lg">
+      <div v-if="displayPokemons" class="row q-col-gutter-md">
         <q-card
-          v-for="(poke, index) in pokemons"
+          v-for="(poke, index) in displayPokemons"
           :key="index"
           class="animating pokemon-card col-md-4 col-lg-3 col-12"
         >
           <q-img :src="poke.detail?.().sprites.front_default" />
 
           <q-card-section>
-            <div class="text-subtitle2">Number</div>
+            <div class="text-subtitle2">
+              N° {{ poke.detail?.().getNumber() }}
+            </div>
             <div class="text-h6">{{ poke.name }}</div>
           </q-card-section>
 
           <div class="flex direction-row justify-around items-center">
             <q-btn
-              style="background: goldenrod; color: white"
-              label="Goldenrod"
+              v-for="(type, indexType) in poke.detail?.().getTypes()"
+              :key="indexType"
+              color="amber-6"
+              text-color="white"
+              :label="type"
             />
-            <q-btn outline style="color: goldenrod" label="Goldenrod" />
           </div>
 
-          <q-card-section class="q-pt-none">gi </q-card-section>
+          <q-card-section class="q-pt-none"></q-card-section>
         </q-card>
       </div>
     </div>
@@ -63,13 +125,54 @@
 import { defineComponent, ref, Ref } from 'vue';
 import { usePokemonStore } from 'src/stores/pokemons';
 import { storeToRefs } from 'pinia';
+import { ResultPoke } from 'src/normalizr/poke/pokemon';
+import { heightScale } from 'src/shared/constant';
 
 export default defineComponent({
   name: 'IndexPage',
   setup() {
     const { pokemons } = storeToRefs(usePokemonStore());
-    const searchText: Ref<string | null> = ref(null);
-    return { searchText, pokemons };
+    const searchText: Ref<string> = ref('');
+    const displayPokemons: Ref<ResultPoke[] | null> = ref(null);
+    const pokemonTypes: Ref<string[]> = ref([]);
+    const visiblePokemonTypes: Ref<{ value: string; label: string }[]> = ref(
+      []
+    );
+    const visiblePokemonHeight: Ref<string[]> = ref([]);
+    return {
+      searchText,
+      pokemons,
+      displayPokemons,
+      pokemonTypes,
+      visiblePokemonTypes,
+      heightScale,
+      visiblePokemonHeight,
+    };
+  },
+  watch: {
+    pokemons() {
+      this.displayPokemons = this.pokemons;
+      if (this.pokemons) {
+        const types: string[] = [];
+        this.pokemons.map((pokemon) => {
+          if (pokemon.detail) {
+            types.push(...pokemon.detail().getTypes());
+          }
+        });
+        this.pokemonTypes = [...new Set(types)];
+      }
+    },
+    searchText() {
+      this.onSearch();
+    },
+    visiblePokemonTypes() {
+      const typesToDisplay = this.visiblePokemonTypes.map((type) => type.value);
+      this.onFilterTypes(typesToDisplay);
+    },
+    visiblePokemonHeight(){
+      this.onFilterHeight(this.visiblePokemonHeight);
+
+    }
   },
   mounted() {
     this.getPokemons();
@@ -78,6 +181,60 @@ export default defineComponent({
     getPokemons(): void {
       usePokemonStore().load();
     },
+    onSearch(): void {
+      if (!this.pokemons) {
+        this.displayPokemons = null;
+        return;
+      }
+      this.displayPokemons = [
+        ...this.pokemons.filter(
+          (pokemon) => pokemon.name.indexOf(this.searchText) !== -1
+        ),
+      ];
+    },
+    onFilterTypes(visibleTypes: string[]): void {
+      if (!this.pokemons) {
+        this.displayPokemons = null;
+        return;
+      }
+      this.displayPokemons = [
+        ...this.pokemons.filter((pokemon) => {
+          if (!pokemon.detail) {
+            return false;
+          }
+          const checkTypes = pokemon
+            .detail()
+            .getTypes()
+            .filter((type) => visibleTypes.includes(type));
+          return checkTypes.length ? true : false;
+        }),
+      ];
+    },
+    updateFilterScale(value: string): void{
+      const clone = [...this.visiblePokemonHeight]
+      const checkIndex = clone.findIndex(val => val===value)
+      if (checkIndex === -1) {
+        clone.push(value)
+      } else {
+        clone.splice(checkIndex, 1)
+      }
+      this.visiblePokemonHeight = clone;
+    },
+    onFilterHeight(scales: string[]): void{
+      console.log(scales)
+      if (!this.pokemons) {
+        this.displayPokemons = null;
+        return;
+      }
+      this.displayPokemons = [
+        ...this.pokemons.filter((pokemon) => {
+          if (!pokemon.detail) {
+            return false;
+          }
+          return scales.includes(pokemon.detail().getHeightScale())
+        }),
+      ];
+    }
   },
 });
 </script>
