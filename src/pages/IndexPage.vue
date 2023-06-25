@@ -18,6 +18,7 @@
     <div>
       <div>
         <q-expansion-item
+          :disable="pokemons===null"
           class="overflow-hidden col"
           icon="filter_alt"
           label="Filtrer les resultats"
@@ -77,6 +78,7 @@
 
       <div class="flex justify-end items-center">
         <q-input
+          :disable="pokemons===null"
           color="grey-3"
           label-color="primary"
           v-model="searchText"
@@ -89,7 +91,17 @@
       </div>
     </div>
     <div class="q-py-lg q-mt-lg">
-      <div v-if="displayPokemons" class="row q-col-gutter-md">
+      <div v-if="pokemons===null" class="row">
+            <q-card v-for="n in 12" :key="n" flat class="col-12 col-md-4 col-lg-3">
+          <q-skeleton height="150px" square />
+
+          <q-card-section>
+            <q-skeleton type="text" width="50%" class="text-subtitle1" />
+            <q-skeleton type="text" class="text-caption" />
+          </q-card-section>
+        </q-card>
+      </div>
+      <div v-else class="row q-col-gutter-md">
         <q-card
           v-for="(poke, index) in displayPokemons"
           :key="index"
@@ -139,6 +151,7 @@ export default defineComponent({
       []
     );
     const visiblePokemonHeight: Ref<string[]> = ref([]);
+    const pages: Ref<number[]> = ref([]);
     return {
       searchText,
       pokemons,
@@ -147,11 +160,26 @@ export default defineComponent({
       visiblePokemonTypes,
       heightScale,
       visiblePokemonHeight,
+      pages,
+      page:ref(1),
     };
+  },
+  computed:{
+    dataIsReady(){
+      this.pokemons !== null
+    },
+    displayedPokemons(){
+      let page = this.page;
+            let perPage = 25;
+            let from = (page * perPage) - perPage;
+            let to = (page * perPage);
+            return  this.pokemons?.slice(from, to)??[];
+    }
   },
   watch: {
     pokemons() {
       this.displayPokemons = this.pokemons;
+      this.setPages()
       if (this.pokemons) {
         const types: string[] = [];
         this.pokemons.map((pokemon) => {
@@ -234,7 +262,16 @@ export default defineComponent({
           return scales.includes(pokemon.detail().getHeightScale())
         }),
       ];
+    },
+    setPages (): void {
+      if (!this.pokemons) {
+        return 
+      }
+    let numberOfPages = Math.ceil(this.pokemons.length / 25);
+    for (let index = 1; index <= numberOfPages; index++) {
+        this.pages.push(index);
     }
+},
   },
 });
 </script>
