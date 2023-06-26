@@ -4,7 +4,7 @@ A Quasar Project VueJS 3
 
 ## Demo
 
-https://vic-pokedex.netlify.app
+
 
 ## Install the dependencies
 
