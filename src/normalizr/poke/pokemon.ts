@@ -1,42 +1,50 @@
 import { BadInitializationError } from 'src/modules/errors';
-import { Sprites } from './types/sprites';
 import { LinkValue } from './types/common';
-import { TypePokemon } from './types/type';
 import { heightScale } from 'src/shared/constant';
+import { PokemonSpecies } from './species';
 
-export interface ResultPoke extends LinkValue {
-  detail?: () => Pokemon;
+interface Sprites {
+  back_default: string;
+  front_default: string;
+  other: {
+    dream_world: {
+      front_default: string;
+    };
+  };
 }
-export interface PokemonResult {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: ResultPoke[];
+
+interface TypePokemon {
+  slot: number;
+  type: LinkValue;
+}
+
+interface Ability {
+  ability: LinkValue;
+  is_hidden: boolean;
+}
+
+interface Stat {
+  base_stat: number;
+  stat: LinkValue;
+  effort: number;
 }
 
 export interface Pokemon {
   sprites: Sprites;
+  species: LinkValue;
   types: TypePokemon[];
   height: number;
   id: number;
   order: number;
+  name: string;
+  weight: number;
+  abilities: Ability[];
+  stats: Stat[];
   getTypes: () => string[];
+  getSpecies?: () => PokemonSpecies[];
   getNumber: () => string;
   getHeightScale: () => string;
-}
-
-abstract class AbstractPokemonResult implements PokemonResult {
-  readonly count: number;
-  readonly next: string | null;
-  readonly previous: string | null;
-  results: ResultPoke[];
-
-  constructor(data: PokemonResult) {
-    this.count = data.count;
-    this.next = data.next;
-    this.previous = data.previous;
-    this.results = data.results;
-  }
+  getFrontDefault: () => string;
 }
 
 abstract class AbstractPokemonDetail implements Pokemon {
@@ -45,6 +53,11 @@ abstract class AbstractPokemonDetail implements Pokemon {
   readonly height: number;
   readonly id: number;
   readonly order: number;
+  readonly name: string;
+  readonly weight: number;
+  readonly species: LinkValue;
+  readonly abilities: Ability[];
+  readonly stats: Stat[];
 
   constructor(data: Pokemon) {
     this.sprites = data.sprites;
@@ -52,10 +65,17 @@ abstract class AbstractPokemonDetail implements Pokemon {
     this.height = data.height;
     this.id = data.id;
     this.order = data.order;
+    this.name = data.name;
+    this.weight = data.weight;
+    this.species = data.species;
+    this.abilities = data.abilities;
+    this.stats = data.stats;
   }
+
   getTypes(): string[] {
     return this.types.map((type) => type.type.name);
   }
+
   getNumber(): string {
     if (this.id < 10) {
       return `00${this.id}`;
@@ -65,6 +85,7 @@ abstract class AbstractPokemonDetail implements Pokemon {
     }
     return this.id.toString();
   }
+
   getHeightScale(): string {
     if (this.height <= 10) {
       return heightScale.small;
@@ -74,17 +95,12 @@ abstract class AbstractPokemonDetail implements Pokemon {
     }
     return heightScale.large;
   }
-}
 
-class PokemonResultRead extends AbstractPokemonResult {
-  declare readonly results: ResultPoke[];
-  constructor(data: PokemonResult) {
-    super(data);
-    if (!this.results) {
-      throw new BadInitializationError();
-    }
+  getFrontDefault(): string {
+    return this.sprites.other.dream_world.front_default;
   }
 }
+
 class PokemonDetailRead extends AbstractPokemonDetail {
   declare readonly sprites: Sprites;
   declare readonly types: TypePokemon[];
@@ -97,9 +113,6 @@ class PokemonDetailRead extends AbstractPokemonDetail {
   }
 }
 export class PokemonFactory {
-  static fromResult(data: PokemonResult): PokemonResultRead {
-    return new PokemonResultRead(data);
-  }
   static createPokemon(data: Pokemon): PokemonDetailRead {
     return new PokemonDetailRead(data);
   }
