@@ -1,6 +1,10 @@
 # pokedex_test (by quasar app)
 
-A Quasar Project
+A Quasar Project VueJS 3
+
+## Demo
+
+https://vic-pokedex.netlify.app
 
 ## Install the dependencies
 
